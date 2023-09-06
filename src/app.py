@@ -29,8 +29,8 @@ d2_under=day_bef_yesterday.strftime("%Y_%m_%d")
 
 # Load the data and create necessary variables
 
-rating_curve = pd.read_excel("https://github.com/girishpatidar/realtime_discharge/dependent/rating_curve_india_py_new_updated.xlsx", index_col=0)
-station_meta = pd.read_excel("https://github.com/girishpatidar/realtime_discharge/dependent/station - Copy.xlsx", index_col=0).sort_values('name')
+rating_curve = pd.read_excel("https://raw.githubusercontent.com/girishpatidar/realtime_discharge/dependent/rating_curve_india_py_new_updated.xlsx", index_col=0)
+station_meta = pd.read_excel("https://raw.githubusercontent.com/girishpatidar/realtime_discharge/dependent/station - Copy.xlsx", index_col=0).sort_values('name')
 available_st_dis_station = station_meta[station_meta['name'].isin(rating_curve['name'])]
 
 # Create the app
@@ -148,8 +148,8 @@ def update_plots(value):
     disabled = True
 
     if value:
-        file_paths = f"https://github.com/girishpatidar/realtime_discharge/dependent/data/{value}2020_to{d1_under}.xlsx"
-        file_paths_yes = f"https://github.com/girishpatidar/realtime_discharge/dependent/data/{value}2020_to{d2_under}.xlsx"
+        file_paths = f"https://raw.githubusercontent.com/girishpatidar/realtime_discharge/dependent/data/{value}2020_to{d1_under}.xlsx"
+        file_paths_yes = f"https://raw.githubusercontent.com/girishpatidar/realtime_discharge/dependent/data/{value}2020_to{d2_under}.xlsx"
         coeff = rating_curve[rating_curve['name'] == value]
         
         if coeff.empty:
