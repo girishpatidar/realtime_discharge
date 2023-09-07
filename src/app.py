@@ -4,9 +4,9 @@
 # In[1]:
 
 
-import datetime
-from datetime import date
-from datetime import timedelta
+#import datetime
+#from datetime import date
+#from datetime import timedelta
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -17,15 +17,22 @@ import dash_html_components as html
 from dash.dependencies import Input, Output, State
 from io import BytesIO
 import base64
+import os
 
+############
+
+all_files=os.listdir("dependent/data")
+
+
+############
 # todays date 
-today = date.today()
-yesterday = today - timedelta(days = 1)
-day_bef_yesterday=today - timedelta(days = 2)
+#today = date.today()
+#yesterday = today - timedelta(days = 1)
+#day_bef_yesterday=today - timedelta(days = 2)
 # d1 = yesterday.strftime("%Y-%m-%d")
-d1_under=yesterday.strftime("%Y_%m_%d")
+#d1_under=yesterday.strftime("%Y_%m_%d")
 # d2=day_bef_yesterday.strftime("%Y-%m-%d")
-d2_under=day_bef_yesterday.strftime("%Y_%m_%d")
+#d2_under=day_bef_yesterday.strftime("%Y_%m_%d")
 
 # Load the data and create necessary variables
 
@@ -33,14 +40,20 @@ rating_curve = pd.read_excel("dependent/rating_curve_india_py_new_updated.xlsx",
 station_meta = pd.read_excel("dependent/station - Copy.xlsx", index_col=0).sort_values('name')
 available_st_dis_station = station_meta[station_meta['name'].isin(rating_curve['name'])]
 
+# global variable user count
+user_count = 0
+
+
 # Create the app
 app = dash.Dash(__name__)
 server = app.server
 
 # Define the layout
 app.layout = html.Div([
-    html.H1("Station Data Dashboard"),
-    html.H2("This dashbord provides real time discharge and WSE for more details visit :Link"),
+    html.Img(src='data:image/png;base64,{}'.format(base64.b64encode(open('iitblogo.jpg', 'rb').read()).decode()), style={'height': '100px', 'width': '300px','float': 'right'}),
+    html.H1("Real-Time Discharge India"),
+    html.H2(["This dashbord provides real time discharge and WSE for more details visit",
+            html.A(": Details", href="https://tinyurl.com/girishiitb", target="_blank")]),
     html.Label("Select station:"),
     dcc.Dropdown(
         id='name-dropdown',
@@ -53,12 +66,22 @@ app.layout = html.Div([
     dcc.Graph(id='wse-plot'),
     dcc.Graph(id='discharge-plot'),
     html.Button('Download Data', id='download-button', disabled=False),
-    html.Div(id='print-output')
+    html.Div(id='print-output'),
+    html.Div("User Count: 0", id="user-count"),  # Display user count here
+    dcc.Location(id='url', refresh=False),  # Add dcc.Location component
 ])
 
 # Define global variables
 filtered_df = None
 print_output = []
+
+# call back for user count
+@app.callback(Output("user-count", "children"), Input("url", "pathname"))
+def update_user_count(pathname):
+    global user_count
+    if pathname == "/":
+        user_count += 1
+    return f"User Count: {user_count}"
 
 # Define callback functions
 @app.callback(
@@ -142,16 +165,18 @@ def update_scatter_plot(value):
     [Input('name-dropdown', 'value')]
 )
 def update_plots(value):
-    global filtered_df
+    global filtered_df, print_output
     fig_wse = go.Figure()
     fig_discharge = go.Figure()
     disabled = True
 
     if value:
-        file_paths = f"dependent/data/{value}2020_to{d1_under}.xlsx"
-        file_paths_yes = f"dependent/data/{value}2020_to{d2_under}.xlsx"
+        prefix=value+'2020_to'
+        matching_files=[filename for filename in all_files if filename.startswith(prefix)]
+        file_paths = os.path.join(f"dependent/data/",matching_files[0])
+        #file_paths_yes = f"F://phd_work//cwc_real_time_data//updated_real_time//dash//DeployWithRender//src//dependent/data/{matching_files[0]}"
         coeff = rating_curve[rating_curve['name'] == value]
-        
+        print_output=[]
         if coeff.empty:
             print_output.append(f'No rating curve available for {value}.')
             print(f'No rating curve available for {value}.')
@@ -159,7 +184,7 @@ def update_plots(value):
             try:
                 df_plot = pd.read_excel(file_paths, index_col=0)
             except:
-                df_plot = pd.read_excel(file_paths_yes, index_col=0)
+                df_plot = pd.read_excel(file_paths, index_col=0)
             wse_std = np.std(df_plot['WSE'])
             threshold = 5
             filtered_df1 = df_plot[abs(df_plot['WSE'] - np.mean(df_plot['WSE'])) < threshold * wse_std]
@@ -208,6 +233,8 @@ def update_plots(value):
             print_output.append(f'{df_plot["name"][0]} Discharge RMSE: {coeff["RMSE"].values} and R-square: {coeff["Rsquare"].values}')
             print(f'{df_plot["name"][0]} Discharge RMSE: {coeff["RMSE"].values} and R-square: {coeff["Rsquare"].values}')
 
+            
+
     return fig_wse, fig_discharge, disabled
 
 @app.callback(
@@ -242,10 +269,3 @@ def update_print_output(value, n_clicks, download_button):
 # Run the app
 if __name__ == '__main__':
     app.run_server(debug=True)
-
-
-# In[ ]:
-
-
-
-
