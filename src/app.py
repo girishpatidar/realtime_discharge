@@ -180,7 +180,7 @@ def update_plots(value):
 
         prefix=value+'2020_to'
         matching_files=[filename for filename in all_files if filename.startswith(prefix)]
-        file_paths = os.path.join(f"F://phd_work//cwc_real_time_data//updated_real_time//dash//DeployWithRender//src//dependent/data/",matching_files[0])
+        file_paths = os.path.join(f"dependent/data/",matching_files[0])
 
         coeff = rating_curve[rating_curve['name'] == value]
         print_output=[]
